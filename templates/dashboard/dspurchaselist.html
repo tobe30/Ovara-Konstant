@@ -1,0 +1,98 @@
+{% extends "includes/base.html" %}
+{% load static %}
+{% load humanize %}
+{% block content %}
+
+
+<div class="page-wrapper">
+<div class="content">
+<div class="page-header">
+<div class="page-title">
+<h4>Purchase List</h4>
+<h6>Manage your Purchase</h6>
+</div>
+<div class="page-btn">
+<a href="{% url 'dashboard:adddspurchase' %}" class="btn btn-added"><img src="{% static 'assets/img/icons/plus.svg' %}" alt="img" class="me-1">Add New Purchase</a>
+</div>
+</div>
+
+<div class="card">
+<div class="card-body">
+<div class="table-top">
+<div class="search-set">
+<div class="search-path">
+<a class="btn btn-filter" id="filter_search">
+<img src="{% static 'assets/img/icons/filter.svg' %}" alt="img">
+<span><img src="{% static 'assets/img/icons/closes.svg' %}" alt="img"></span>
+</a>
+</div>
+<div class="search-input">
+<a class="btn btn-searchset"><img src="{% static 'assets/img/icons/search-white.svg' %}" alt="img"></a>
+</div>
+</div>
+<div class="wordset">
+<ul>
+<li>
+<a data-bs-toggle="tooltip" data-bs-placement="top" title="pdf"><img src="{% static 'assets/img/icons/pdf.svg' %}" alt="img"></a>
+</li>
+<li>
+<a data-bs-toggle="tooltip" data-bs-placement="top" title="excel"><img src="{% static 'assets/img/icons/excel.svg' %}" alt="img"></a>
+</li>
+<li>
+<a data-bs-toggle="tooltip" data-bs-placement="top" title="print"><img src="{% static 'assets/img/icons/printer.svg' %}" alt="img"></a>
+</li>
+</ul>
+</div>
+</div>
+
+<div class="card mb-0" id="filter_inputs">
+<div class="card-body pb-0">
+<div class="row">
+
+</div>
+</div>
+</div>
+
+<div class="table-responsive">
+<table class="table datanew">
+<thead>
+<tr>
+<th>Product</th>
+<th>Purchase Date</th>
+<th>Price </th>
+<th>Unit Purchased</th>
+<th>Point of contact</th>
+<th>Action</th>
+</tr>
+</thead>
+<tbody>
+{% for p in purchases %}
+<tr>
+<td>{{p.product}}</td>
+<td>{{p.purchase_date}}</td>
+<td>€{{p.price|floatformat:2|intcomma}}</td>
+<td>{{p.unit_purchased}}</td>
+<td>{{p.point_of_contact}}</td>
+<td>
+<a class="me-3" href="{% url 'dashboard:edit-dp' p.pk %}">
+<img src="{% static 'assets/img/icons/edit.svg' %}" alt="img">
+</a>
+<a class="confirm-text" href="{% url 'dashboard:deleted' p.pk %}">
+<img src="{% static 'assets/img/icons/delete.svg' %}" alt="img">
+</a>
+</td>
+</tr>
+{% empty %}
+<p class="text-danger">No Purchases Made yet</p>
+{% endfor %}
+</tbody>
+</table>
+</div>
+</div>
+</div>
+
+</div>
+</div>
+</div>
+
+{% endblock content %}

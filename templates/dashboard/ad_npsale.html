@@ -1,0 +1,89 @@
+
+{% extends "includes/base.html" %}
+{% load static %}
+
+{% block title %}Add NP7A Sale{% endblock %}
+
+{% block content %}
+<div class="page-wrapper">
+<div class="content">
+<div class="page-header">
+<div class="page-title">
+<h4>Create BC Sales</h4>
+<h6>Add/Update Sales Return</h6>
+</div>
+</div>
+<div class="card">
+<div class="card-body">
+ <form method="POST">
+    {% csrf_token %}
+    
+<div class="row">
+<div class="col-lg-3 col-sm-6 col-12">
+<div class="form-group">
+<label>Product</label>
+<div class="row">
+<div class="col-lg-10 col-sm-10 col-10">
+{{ form.product }}
+</div>
+</div>
+</div>
+</div>
+<div class="col-lg-3 col-sm-6 col-12">
+<div class="form-group">
+<label>Sales Date</label>
+<div class="input-groupicon">
+{{ form.sales_date }}
+<!-- <div class="addonset">
+<img src="{% static 'assets/img/icons/calendars.svg' %}" alt="img">
+</div> -->
+</div>
+</div>
+</div>
+<div class="col-lg-3 col-sm-6 col-12">
+<div class="form-group">
+<label>Price</label>
+{{ form.price }}
+</div>
+</div>
+<div class="col-lg-3 col-sm-6 col-12">
+<div class="form-group">
+<label>Unit Sold</label>
+{{ form.unit_sold }}
+</div>
+</div>
+
+<div class="col-lg-6 col-sm-6 col-12">
+<div class="form-group">
+<label>Point of contact</label>
+{{ form.point_of_contact }}
+</div>
+</div>
+<div class="col-lg-6 col-sm-6 col-12">
+<div class="form-group">
+<label>Type</label>
+{{ form.type }}
+</div>
+</div>
+<div class="col-lg-12">
+<div class="form-group">
+<label>Notes</label>
+{{ form.notes }}
+</div>
+</div>
+<div class="col-lg-12">
+<button type="submit" href="javascript:void(0);" class="btn btn-submit me-2">Submit</button>
+<a href="{% url 'dashboard:np_salelist'%}" class="btn btn-cancel">Cancel</a>
+</div>
+</div>
+ </form>
+
+</div>
+</div>
+</div>
+</div>
+</div>
+
+
+{% endblock content%}
+

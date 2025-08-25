@@ -1,0 +1,100 @@
+{% extends "includes/base.html" %}
+{% load static %}
+{% load humanize %}
+{% block content %}
+
+
+<div class="page-wrapper">
+<div class="content">
+<div class="page-header">
+<div class="page-title">
+<h4>Inventory List</h4>
+<h6>Available for NP7A</h6>
+</div>
+<div class="page-btn">
+<a href="{% url 'dashboard:index' %}" class="btn btn-added"><img src="{% static 'assets/img/icons/dashboard.svg' %}" alt="img" class="me-1">Go To Dashboard</a>
+</div>
+</div>
+
+<div class="card">
+<div class="card-body">
+<div class="table-top">
+<div class="search-set">
+<div class="search-path">
+<a class="btn btn-filter" id="filter_search">
+<img src="{% static 'assets/img/icons/filter.svg' %}" alt="img">
+<span><img src="{% static 'assets/img/icons/closes.svg' %}" alt="img"></span>
+</a>
+</div>
+<div class="search-input">
+<a class="btn btn-searchset"><img src="{% static 'assets/img/icons/search-white.svg' %}" alt="img"></a>
+</div>
+</div>
+<div class="wordset">
+<ul>
+<li>
+<a data-bs-toggle="tooltip" data-bs-placement="top" title="pdf"><img src="{% static 'assets/img/icons/pdf.svg' %}" alt="img"></a>
+</li>
+<li>
+<a data-bs-toggle="tooltip" data-bs-placement="top" title="excel"><img src="{% static 'assets/img/icons/excel.svg' %}" alt="img"></a>
+</li>
+<li>
+<a data-bs-toggle="tooltip" data-bs-placement="top" title="print"><img src="{% static 'assets/img/icons/printer.svg' %}" alt="img"></a>
+</li>
+</ul>
+</div>
+</div>
+
+<div class="card mb-0" id="filter_inputs">
+<div class="card-body pb-0">
+<div class="row">
+
+</div>
+</div>
+</div>
+
+<div class="table-responsive">
+<table class="table datanew">
+<thead>
+<tr>
+<th>Product</th>
+<th>Product id</th>
+<th>Unit Bought </th>
+<th>Unit Sold</th>
+<th>Inventory</th>
+<th>status</th>
+</tr>
+</thead>
+<tbody>
+{% for p in inventory_data %}
+<tr>
+<td>{{ p.item_name }}</td>
+<td>{{ p.item_id }}</td>
+<td>{{ p.unit_bought }}</td>
+<td>{{ p.unit_sold }}</td>
+<td>{{ p.inventory }}</td>
+<td>
+     {% if p.status == 'Out of Stock' %}
+                    <span class="badge bg-danger">{{ p.status }}</span>
+                {% elif p.status == 'Low Stock' %}
+                    <span class="badge bg-warning text-dark">{{ p.status }}</span>
+                {% else %}
+                    <span class="badge bg-success">{{ p.status }}</span>
+                {% endif %}
+</td>
+
+</tr>
+{% empty %}
+<p class="text-danger">No inventory Made yet</p>
+{% endfor %}
+</tbody>
+</table>
+</div>
+</div>
+</div>
+
+</div>
+</div>
+</div>
+
+{% endblock content %}

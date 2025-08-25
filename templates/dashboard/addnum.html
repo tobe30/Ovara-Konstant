@@ -1,0 +1,64 @@
+{% extends 'includes/base.html' %}
+{% load static %}
+{% block content%}
+
+<div class="page-wrapper">
+<div class="content">
+<div class="page-header">
+<div class="page-title">
+<h4>80800 Add</h4>
+<h6>Create new product</h6>
+</div>
+</div>
+
+<div class="card">
+<div class="card-body">
+<form method="POST">
+    {% csrf_token %}
+<div class="row">
+<div class="col-lg-6 col-sm-6 col-12">
+<div class="form-group">
+<label>Item id</label>
+{{ form.item_id }}
+</div>
+</div>
+<div class="col-lg-6 col-sm-6 col-12">
+<div class="form-group">
+<label>Name</label>
+{{ form.name }}
+</div>
+</div>
+<div class="col-lg-6 col-sm-6 col-12">
+<div class="form-group">
+<label>Type</label>
+{{ form.type }}
+</div>
+</div>
+<div class="col-lg-4 col-sm-6 col-12">
+<div class="form-group">
+<label>Cost per unit</label>
+{{ form.unit }}
+</div>
+</div>
+
+<div class="col-lg-4 col-sm-6 col-12">
+<div class="form-group">
+<label>Total cost Value</label>
+{{ form.total_cost_value }}
+</div>
+</div>
+
+<div class="col-lg-12">
+<button type="submit"  class="btn btn-submit me-2">Submit</button>
+<a href="{% url 'dashboard:numlist' %}" class="btn btn-cancel">Cancel</a>
+</div>
+</div>
+</form>
+</div>
+</div>
+
+</div>
+</div>
+</div>
+
+{% endblock content %}

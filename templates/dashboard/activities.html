@@ -1,0 +1,48 @@
+{% extends "includes/base.html" %}
+{% load static %}
+{% block content %}
+
+<div class="page-wrapper">
+<div class="content">
+<div class="page-header">
+<div class="page-title">
+<h4>All Notifications</h4>
+<h6>View your all activities</h6>
+</div>
+</div>
+
+<div class="activity">
+<div class="activity-box">
+<ul class="activity-list">
+    {% if notifications %}
+    {% for n in notifications %}
+<li>
+<div class="activity-user">
+<a href="#" title="" data-toggle="tooltip" data-original-title="Lesley Grauer">
+<img alt="Lesley Grauer" src="{% static 'assets/img/default.jpg' %}" class=" img-fluid">
+</a>
+</div>
+<div class="activity-content">
+<div class="timeline-content">
+<a href="#" class="name">{{n.message}} </a> 
+<span class="time">{{n.created_at}}</span>
+</div>
+</div>
+</li>
+{% endfor %}
+    {% else %}
+    <li>
+        <div class="activity-content">
+            <p style="color: red;">No notifications found.</p>
+        </div>
+    </li>
+    {% endif %}
+</ul>
+</div>
+</div>
+
+</div>
+</div>
+</div>
+
+{% endblock content %}

@@ -1,0 +1,265 @@
+{% extends 'includes/base.html' %}
+{% load static %}
+{% block content%}
+{% load humanize %}
+
+<div class="page-wrapper">
+<div class="content">
+<div class="row">
+<div class="col-lg-3 col-sm-6 col-12">
+<div class="dash-widget">
+<div class="dash-widgetimg">
+<span><img src="{% static 'assets/img/icons/dash2.svg' %}" alt="img"></span>
+</div>
+<div class="dash-widgetcontent">
+<h5>€<span class="counters">{{ total_revenue|floatformat:2|intcomma }}</span></h5>
+<h6>Total Revenue</h6>
+</div>
+</div>
+</div>
+<div class="col-lg-3 col-sm-6 col-12">
+<div class="dash-widget dash1">
+<div class="dash-widgetimg">
+<span><img src="{% static 'assets/img/icons/dash1.svg' %}" alt="img"></span>
+</div>
+<div class="dash-widgetcontent">
+<h5>€<span class="counters">{{ total_cost|floatformat:2|intcomma }}</span></h5>
+<h6>Total Cost</h6>
+</div>
+</div>
+</div>
+<div class="col-lg-3 col-sm-6 col-12">
+<div class="dash-widget dash2">
+<div class="dash-widgetimg">
+<span><img src="{% static 'assets/img/icons/dash2.svg' %}" alt="img"></span>
+</div>
+<div class="dash-widgetcontent">
+<h5>€<span class="counters">{{ inventory_value|floatformat:2|intcomma }}</span></h5>
+<h6>Inventory Value</h6>
+</div>
+</div>
+</div>
+<div class="col-lg-3 col-sm-6 col-12">
+<div class="dash-widget dash3">
+<div class="dash-widgetimg">
+<!-- <span><img src="{% static 'assets/img/icons/dash4.svg' %}" alt="img"></span> -->
+</div>
+<div class="dash-widgetcontent">
+
+<h5 style="color: black;"><span class="counters" >{{np7a_products.count}}</span></h5>
+<h6>Total product for NP7A</h6>
+
+</div>
+</div>
+</div>
+<div class="col-lg-3 col-sm-6 col-12 d-flex">
+<div class="dash-count">
+<div class="dash-counts">
+<h4>{{ products.count }}</h4>
+<h5>Total Product for US BC211 </h5>
+</div>
+<div class="dash-imgs">
+<i data-feather="user"></i>
+</div>
+</div>
+</div>
+<div class="col-lg-3 col-sm-6 col-12 d-flex">
+<div class="dash-count das1">
+<div class="dash-counts">
+<h4>{{ bc_products.count }}</h4>
+<h5>Total BC Products</h5>
+</div>
+<div class="dash-imgs">
+<i data-feather="user-check"></i>
+</div>
+</div>
+</div>
+<div class="col-lg-3 col-sm-6 col-12 d-flex">
+<div class="dash-count das2">
+<div class="dash-counts">
+<h4>{{ number8_products.count }}</h4>
+<h5>Total 80800 </h5>
+</div>
+<div class="dash-imgs">
+<i data-feather="file-text"></i>
+</div>
+</div>
+</div>
+<div class="col-lg-3 col-sm-6 col-12 d-flex">
+<div class="dash-count das3">
+<div class="dash-counts">
+<h4>{{ ds9c_products.count }}</h4>
+<h5>Total DS-9C Products </h5>
+</div>
+<div class="dash-imgs">
+<i data-feather="file"></i>
+</div>
+</div>
+</div>
+</div>
+
+
+<div class="row">
+<div class="col-lg-7 col-sm-12 col-12 d-flex">
+<div class="card flex-fill">
+<div class="card-header pb-0 d-flex justify-content-between align-items-center">
+<h5 class="card-title mb-0">Purchase Vs Sales for(US BC211)</h5>
+<div class="graph-sets">
+<ul>
+<li>
+<span>Sales</span>
+</li>
+<li>
+<span>Purchase</span>
+</li>
+</ul>
+</div>
+</div>
+<div class="card-body">
+    <canvas id="salesChart" height="200"></canvas>
+  </div>
+</div>
+</div>
+<div class="col-lg-5 col-sm-12 col-12 d-flex">
+<div class="card flex-fill">
+<div class="card-header pb-0 d-flex justify-content-between align-items-center">
+<h4 class="card-title mb-0">Recently Added Products</h4>
+<div class="dropdown">
+<a href="javascript:void(0);" data-bs-toggle="dropdown" aria-expanded="false" class="dropset">
+<i class="fa fa-ellipsis-v"></i>
+</a>
+<ul class="dropdown-menu" aria-labelledby="dropdownMenuButton">
+<li>
+<a href="{% url 'dashboard:productlist' %}" class="dropdown-item">Product List</a>
+</li>
+<li>
+<a href="{% url 'dashboard:addproduct' %}" class="dropdown-item">Product Add</a>
+</li>
+</ul>
+</div>
+</div>
+<div class="card-body">
+<div class="table-responsive dataview">
+<table class="table datatable ">
+<thead>
+<tr>
+<th>Sno</th>
+<th>Products</th>
+<th>Average Cost</th>
+</tr>
+</thead>
+<tbody>
+{% for p in recent_products %}
+<tr>
+<td>US-{{p.item_id}}</td>
+<td class="productimgname">
+<a href="{% url 'dashboard:productlist' %}" class="product-img">
+    
+</a>
+<a href="{% url 'dashboard:productlist' %}">{{ p.name }}</a>
+</td>
+<td>€{{ p.average_cost|floatformat:2|intcomma }}</td>
+</tr>
+{% empty %}
+<p style="color: red;">Nothing to show</p>
+{% endfor %}
+
+{% for p in recent_bc %}
+<tr>
+<td>BC-{{p.item_id}}</td>
+<td class="productimgname">
+<a href="{% url 'dashboard:productlist' %}" class="product-img">
+    
+</a>
+<a href="{% url 'dashboard:productlist' %}">{{ p.name }}</a>
+</td>
+<td>€{{ p.average_cost|floatformat:2|intcomma }}</td>
+</tr>
+
+{% endfor %}
+
+{% for p in recent_number8 %}
+<tr>
+<td>80800-{{p.item_id}}</td>
+<td class="productimgname">
+<a href="{% url 'dashboard:productlist' %}" class="product-img">
+    
+</a>
+<a href="{% url 'dashboard:productlist' %}">{{ p.name }}</a>
+</td>
+<td>€{{ p.average_cost|floatformat:2|intcomma }}</td>
+</tr>
+{% endfor %}
+
+{% for p in recent_ds9c %}
+<tr>
+<td>DS-9C-{{p.item_id}}</td>
+<td class="productimgname">
+<a href="{% url 'dashboard:productlist' %}" class="product-img">
+    
+</a>
+<a href="{% url 'dashboard:productlist' %}">{{ p.name }}</a>
+</td>
+<td>€{{ p.average_cost|floatformat:2|intcomma }}</td>
+</tr>
+{% endfor %}
+
+{% for p in recent_np7a %}
+<tr>
+<td>NP7A-{{p.item_id}}</td>
+<td class="productimgname">
+<a href="{% url 'dashboard:productlist' %}" class="product-img">
+    
+</a>
+<a href="{% url 'dashboard:productlist' %}">{{ p.name }}</a>
+</td>
+<td>€{{ p.average_cost|floatformat:2|intcomma }}</td>
+</tr>
+{% endfor %}
+</tbody>
+</table>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="card mb-0">
+<div class="card-body">
+<h4 class="card-title">Top 5 Most Sold Items</h4>
+<div class="table-responsive dataview">
+<table class="table datatable ">
+<thead>
+<tr>
+<th>Product Name</th>
+<th>Product ID</th>
+<th>Total Sold</th>
+<th>Current Stock</th>
+</tr>
+</thead>
+<tbody>
+  {% for item in top_sold_items %}
+    <tr>
+       <td>{{ item.name }}</td>
+        <td>{{ item.item_id }}</td>
+        <td>{{ item.total_sold }}</td>
+        <td>{{ item.current_stock }}</td>
+  
+    </tr>
+  {% empty %}
+   
+      <p colspan="7" class="text-center text-danger">No Product Data Available</p>
+  
+  {% endfor %}
+</tbody>
+
+</table>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+
+{% endblock content %}
+
+
