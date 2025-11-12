@@ -26,7 +26,7 @@ SECRET_KEY = 'django-insecure-c@=b#5qrm@55$u&6%$1nzxplm$^)55wkku555q-swdy97qg5ne
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = False
 
-ALLOWED_HOSTS = ['ovara-konstant.onrender.com/', '127.0.0.1', 'localhost']
+ALLOWED_HOSTS = ['ovara-konstant.onrender.com', '127.0.0.1', 'localhost']
 
 LOGIN_URL = '/login/'
 LOGIN_REDIRECT_URL = '/'
