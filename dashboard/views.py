@@ -21,162 +21,146 @@ from django.utils.timezone import now
 from datetime import date
 today = date.today()
 
+from django.db.models import Sum, F, FloatField, DecimalField, Value as V
+from django.db.models.functions import Coalesce, TruncMonth
+from itertools import chain
+from datetime import date
+import calendar
+from django.shortcuts import render
+from django.contrib.auth.decorators import login_required
+from django.utils.timezone import now
+
 @login_required
 def index(request):
-
     products = Product.objects.all()
-    bc_products= BC.objects.all()
+    bc_products = BC.objects.all()
     number8_products = Number8.objects.all()
     ds9c_products = Ds9c.objects.all()
     np7a_products = Np7a.objects.all()
     
     today = date.today()
     
+    # Combine all items for total stock and top sold
     all_items = list(chain(products, bc_products, number8_products, ds9c_products, np7a_products))
     
     total_current_stock = sum([p.current_stock or 0 for p in all_items])
-
-# 💰 Total Revenue = Sum of all sales (unit_sold * price) from all product models
-    total_revenue = (
-    (Sale.objects.aggregate(revenue=Sum(F('unit_sold') * F('price'), output_field=FloatField()))['revenue'] or 0) +
-    (BCSale.objects.aggregate(revenue=Sum(F('unit_sold') * F('price'), output_field=FloatField()))['revenue'] or 0) +
-    (NSale.objects.aggregate(revenue=Sum(F('unit_sold') * F('price'), output_field=FloatField()))['revenue'] or 0) +
-    (DSSale.objects.aggregate(revenue=Sum(F('unit_sold') * F('price'), output_field=FloatField()))['revenue'] or 0) +
-    (N7Sale.objects.aggregate(revenue=Sum(F('unit_sold') * F('price'), output_field=FloatField()))['revenue'] or 0)
-)
-# 💸 Total Cost = Sum of all purchases (unit_purchased * price) from all product models
-    total_cost = (
-    Purchase.objects.aggregate(cost=Sum(F('unit_purchased') * F('price'), output_field=FloatField()))['cost'] or 0
-) + (
-    BCPurchase.objects.aggregate(cost=Sum(F('unit_purchased') * F('price'), output_field=FloatField()))['cost'] or 0
-) + (
-    NPurchase.objects.aggregate(cost=Sum(F('unit_purchased') * F('price'), output_field=FloatField()))['cost'] or 0
-) + (
-    N7Purchase.objects.aggregate(cost=Sum(F('unit_purchased') * F('price'), output_field=FloatField()))['cost'] or 0
-) + (
-    DsPurchase.objects.aggregate(cost=Sum(F('unit_purchased') * F('price'), output_field=FloatField()))['cost'] or 0
-)
-
-
-# 🏪 Inventory Value = Sum of (product.current_stock * product.average_cost()) for each product
-    inventory_value = 0
-    for product in products:
-        inventory_value += (product.current_stock or 0) * float(product.average_cost())
-    for bc_product in bc_products:
-        inventory_value += (bc_product.current_stock or 0) * float(bc_product.average_cost())
-    for number8_product in number8_products:
-        inventory_value += (number8_product.current_stock or 0) * float(number8_product.average_cost())
-    for ds9c_product in ds9c_products:
-        inventory_value += (ds9c_product.current_stock or 0) * float(ds9c_product.average_cost())
-    for np7a_product in np7a_products:
-        inventory_value += (np7a_product.current_stock or 0) * float(np7a_product.average_cost())
-        
+    
+    # 💰 Total Revenue
+    total_revenue = sum([
+        Sale.objects.aggregate(revenue=Coalesce(Sum(F('unit_sold') * F('price'), output_field=FloatField()), 0))['revenue'],
+        BCSale.objects.aggregate(revenue=Coalesce(Sum(F('unit_sold') * F('price'), output_field=FloatField()), 0))['revenue'],
+        NSale.objects.aggregate(revenue=Coalesce(Sum(F('unit_sold') * F('price'), output_field=FloatField()), 0))['revenue'],
+        DSSale.objects.aggregate(revenue=Coalesce(Sum(F('unit_sold') * F('price'), output_field=FloatField()), 0))['revenue'],
+        N7Sale.objects.aggregate(revenue=Coalesce(Sum(F('unit_sold') * F('price'), output_field=FloatField()), 0))['revenue'],
+    ])
+    
+    # 💸 Total Cost
+    total_cost = sum([
+        Purchase.objects.aggregate(cost=Coalesce(Sum(F('unit_purchased') * F('price'), output_field=FloatField()), 0))['cost'],
+        BCPurchase.objects.aggregate(cost=Coalesce(Sum(F('unit_purchased') * F('price'), output_field=FloatField()), 0))['cost'],
+        NPurchase.objects.aggregate(cost=Coalesce(Sum(F('unit_purchased') * F('price'), output_field=FloatField()), 0))['cost'],
+        N7Purchase.objects.aggregate(cost=Coalesce(Sum(F('unit_purchased') * F('price'), output_field=FloatField()), 0))['cost'],
+        DsPurchase.objects.aggregate(cost=Coalesce(Sum(F('unit_purchased') * F('price'), output_field=FloatField()), 0))['cost'],
+    ])
+    
+    # 🏪 Inventory Value (using annotations to avoid per-object queries)
+    def calculate_inventory_value(queryset):
+        annotated = queryset.annotate(
+            total_cost=Coalesce(Sum(F('purchase__unit_purchased') * F('purchase__price'), output_field=DecimalField()), V(0)),
+            total_units=Coalesce(Sum('purchase__unit_purchased', output_field=DecimalField()), V(0))
+        )
+        inv_value = 0
+        for p in annotated:
+            avg_cost = (p.total_cost / p.total_units) if p.total_units else 0
+            inv_value += (p.current_stock or 0) * float(avg_cost)
+        return inv_value
+    
+    inventory_value = sum([
+        calculate_inventory_value(products),
+        calculate_inventory_value(bc_products),
+        calculate_inventory_value(number8_products),
+        calculate_inventory_value(ds9c_products),
+        calculate_inventory_value(np7a_products)
+    ])
+    
     # Total units sold today
-    total_sold = Sale.objects.aggregate(total=Sum('unit_sold'))['total'] or 0
-
-
+    total_sold = Sale.objects.aggregate(total=Coalesce(Sum('unit_sold'), 0))['total']
+    
     # 📊 Monthly sales vs purchase chart
     current_year = now().year
-
+    
     sales_by_month = (
-         Sale.objects
-         .filter(sales_date__year=current_year)
-         .annotate(month=TruncMonth('sales_date'))
-         .values('month')
-         .annotate(
-          total_sales=Coalesce(
-            Sum(F('unit_sold') * F('price'), output_field=FloatField()),
-            V(0),
-            output_field=FloatField()
-        )
+        Sale.objects.filter(sales_date__year=current_year)
+        .annotate(month=TruncMonth('sales_date'))
+        .values('month')
+        .annotate(total_sales=Coalesce(Sum(F('unit_sold') * F('price'), output_field=FloatField()), V(0)))
+        .order_by('month')
     )
-    .order_by('month')
-)
-
-
+    
     purchases_by_month = (
-      Purchase.objects
-      .filter(purchase_date__year=current_year)
-      .annotate(month=TruncMonth('purchase_date'))
-      .values('month')
-      .annotate(
-        total_purchase=Coalesce(
-            Sum(F('unit_purchased') * F('price'), output_field=FloatField()),
-            V(0),
-            output_field=FloatField()
-        )
+        Purchase.objects.filter(purchase_date__year=current_year)
+        .annotate(month=TruncMonth('purchase_date'))
+        .values('month')
+        .annotate(total_purchase=Coalesce(Sum(F('unit_purchased') * F('price'), output_field=FloatField()), V(0)))
+        .order_by('month')
     )
-    .order_by('month')
-)
-
-
-    monthly_data = {}
-    for i in range(1, 13):
-        month_name = calendar.month_abbr[i]
-        monthly_data[month_name] = {'sales': 0, 'purchase': 0}
-
+    
+    monthly_data = {calendar.month_abbr[i]: {'sales': 0, 'purchase': 0} for i in range(1, 13)}
+    
     for entry in sales_by_month:
         month = calendar.month_abbr[entry['month'].month]
         monthly_data[month]['sales'] = round(entry['total_sales'], 2)
-
+    
     for entry in purchases_by_month:
         month = calendar.month_abbr[entry['month'].month]
         monthly_data[month]['purchase'] = round(entry['total_purchase'], 2)
-
-    # Prepare chart lists
+    
     labels = list(monthly_data.keys())
     sales = [monthly_data[m]['sales'] for m in labels]
     purchases = [monthly_data[m]['purchase'] for m in labels]
     profits = [s - p for s, p in zip(sales, purchases)]
     
-    
+    # Recent products
     recent_products = Product.objects.order_by('-id')[:5]
     recent_bc = BC.objects.order_by('-id')[:5]
     recent_number8 = Number8.objects.order_by('-id')[:5]
     recent_ds9c = Ds9c.objects.order_by('-id')[:5]
     recent_np7a = Np7a.objects.order_by('-id')[:5]
     
-    # Sort by total_sold descending and get the top one
-    
+    # Top sold items
     for item in all_items:
         if item.total_sold is None:
             item.total_sold = 0
-        
     top_sold_items = sorted(all_items, key=lambda x: x.total_sold, reverse=True)[:5]
     
-    # Today
+    # Revenues
     today_revenue = Sale.objects.filter(sales_date=today).aggregate(
-    revenue=Sum(F('price') * F('unit_sold'), output_field=DecimalField())
-    )['revenue'] or 0
-    
+        revenue=Coalesce(Sum(F('price') * F('unit_sold'), output_field=DecimalField()), 0)
+    )['revenue']
     
     month_revenue = Sale.objects.filter(
-    sales_date__year=today.year,
-    sales_date__month=today.month
-).aggregate(
-    revenue=Sum(F('price') * F('unit_sold'), output_field=DecimalField())
-)['revenue'] or 0
-
-# This Year Revenue
-    year_revenue = Sale.objects.filter(
-    sales_date__year=today.year
+        sales_date__year=today.year,
+        sales_date__month=today.month
     ).aggregate(
-    revenue=Sum(F('price') * F('unit_sold'), output_field=DecimalField())
-    )['revenue'] or 0
-
+        revenue=Coalesce(Sum(F('price') * F('unit_sold'), output_field=DecimalField()), 0)
+    )['revenue']
     
-
-    # Final context
+    year_revenue = Sale.objects.filter(
+        sales_date__year=today.year
+    ).aggregate(
+        revenue=Coalesce(Sum(F('price') * F('unit_sold'), output_field=DecimalField()), 0)
+    )['revenue']
+    
     context = {
         'labels': labels,
         'sales_data': sales,
         'purchase_data': purchases,
         'profit_data': profits,
-        'products':products,
-        'bc_products':bc_products,
-        'number8_products':number8_products,
-        'ds9c_products':ds9c_products,
-        'np7a_products':np7a_products,
+        'products': products,
+        'bc_products': bc_products,
+        'number8_products': number8_products,
+        'ds9c_products': ds9c_products,
+        'np7a_products': np7a_products,
         'total_revenue': round(total_revenue, 2),
         'total_cost': round(total_cost, 2),
         'inventory_value': round(inventory_value, 2),
@@ -185,11 +169,11 @@ def index(request):
         'recent_number8': recent_number8,
         'recent_ds9c': recent_ds9c,
         'recent_np7a': recent_np7a,
-        'top_sold_items':top_sold_items,
+        'top_sold_items': top_sold_items,
         'today_revenue': today_revenue,
         'month_revenue': month_revenue,
         'year_revenue': year_revenue,
-        'total_sold':total_sold,
+        'total_sold': total_sold,
         'total_current_stock': total_current_stock,
     }
 
