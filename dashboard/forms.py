@@ -12,7 +12,7 @@ class BcForm(forms.ModelForm):
         'placeholder': 'Enter Item Name',
     }))
     
-    unit = forms.CharField(widget=forms.NumberInput(attrs={
+    unit = forms.DecimalField(widget=forms.NumberInput(attrs={
         'placeholder': 'Enter Item Cost per unit',
         'class': 'form-control'
     }),required=False)
@@ -131,7 +131,7 @@ class NpForm(forms.ModelForm):
         'placeholder': 'Enter Item Name',
     }))
     
-    unit = forms.CharField(widget=forms.NumberInput(attrs={
+    unit = forms.DecimalField(widget=forms.NumberInput(attrs={
         'placeholder': 'Enter Item Cost per unit',
         'class': 'form-control'
     }),required=False)
